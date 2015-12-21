@@ -33,6 +33,14 @@ module.exports = function(grunt) {
         files: ['<%= config.src %>/{content,data,templates}/{,*/}*.{md,hbs,yml}'],
         tasks: ['assemble']
       },
+      sass: {
+        files: ['<%= config.src %>/assets/scss/{,*/}*.scss'],
+        tasks: ['sass:dev']
+      },
+      images: {
+        files: ['<%= config.src %>/assets/images/**'],
+        tasks: ['copy:images']
+      },
       livereload: {
         options: {
           livereload: '<%= connect.options.livereload %>'
@@ -71,7 +79,19 @@ module.exports = function(grunt) {
           layout: '<%= config.src %>/templates/layouts/default.hbs',
           data: '<%= config.src %>/data/*.{json,yml}',
           partials: '<%= config.src %>/templates/partials/*.hbs',
-          plugins: ['assemble-contrib-permalinks','assemble-contrib-sitemap'],
+          plugins: ['assemble-contrib-permalinks','assemble-middleware-sitemap'],
+          permalinks: {
+            structure: ':basename/index.html'
+          },
+          minify: {
+            removeAttributeQuotes: false
+          },
+          helpers: ['handlebars-helper-minify'],
+          sitemap: {
+            removeindex: true,
+            relativedest: true,
+            dest: '<%= config.dist %>'
+          }
         },
         files: {
           '<%= config.dist %>/': ['<%= config.src %>/templates/pages/*.hbs']
@@ -86,21 +106,43 @@ module.exports = function(grunt) {
         src: '**',
         dest: '<%= config.dist %>/assets/'
       },
-      theme: {
+      images: {
         expand: true,
-        cwd: 'src/assets/',
+        cwd: '<%= config.src %>/assets/images/',
         src: '**',
-        dest: '<%= config.dist %>/assets/css/'
+        dest: '<%= config.dist %>/assets/images/'
+      },
+    },
+
+    sass: {
+      dev: {
+        options: {
+          sourceMap: true
+        },
+        files: {
+          '<%= config.dist %>/assets/css/theme.css': '<%= config.src %>/assets/scss/theme.scss'
+        }
+      },
+      prod: {
+        options: {
+          sourceMap: false,
+          outputStyle: 'compressed'
+        },
+        files: {
+          '<%= config.dist %>/assets/css/theme.css': '<%= config.src %>/assets/scss/theme.scss'
+        }
       }
+
     },
 
     // Before generating any new files,
     // remove any previously-created files.
-    clean: ['<%= config.dist %>/**/*.{html,xml}']
+    clean: ['<%= config.dist %>/**/*']
 
   });
 
   grunt.loadNpmTasks('assemble');
+  grunt.loadNpmTasks('grunt-sass');
 
   grunt.registerTask('server', [
     'build',
@@ -108,9 +150,23 @@ module.exports = function(grunt) {
     'watch'
   ]);
 
+  grunt.registerTask('server:prod', [
+    'build:prod',
+    'connect:livereload',
+    'watch'
+  ]);
+
   grunt.registerTask('build', [
     'clean',
     'copy',
+    'sass:dev',
+    'assemble'
+  ]);
+
+  grunt.registerTask('build:prod', [
+    'clean',
+    'copy',
+    'sass:prod',
     'assemble'
   ]);
 
