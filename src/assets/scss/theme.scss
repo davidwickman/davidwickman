@@ -468,6 +468,10 @@ a.fixed-mobile-footer h4 {
   width: 50px;
   text-align: center;
   margin: 0 5px;
+
+  .contact & {
+    margin: 5px 10px;
+  }
 }
 
 .flex-container {
@@ -585,6 +589,10 @@ a.fixed-mobile-footer h4 {
   }
   &-date {
     margin-top: 50px;
+  }
+
+  .contact & {
+    font-size: 18px;
   }
 }
 
